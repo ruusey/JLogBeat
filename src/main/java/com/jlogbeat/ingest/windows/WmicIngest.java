@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class WmicIngest {
 	private static final List<String> LOG_NAMES = Arrays.asList("system", "application", "security");
-	public static final String EXPORT_PATH = "D:\\tmp\\^&.json";
+	public static final String EXPORT_PATH = System.getenv("EXPORT_DIR") + "\\^&.json";
 	public static final Long initialTs = Instant.now().toEpochMilli();
 	private static final String COMMAND = "pwsh.exe -Command \"Get-WinEvent -FilterHashtable @{ LogName='^'; StartTime=+} -MaxEvents 100 | ConvertTo-Json -Depth 4 | Out-File % -Encoding utf8\"";
 

@@ -79,7 +79,7 @@ public class ImportThread extends Thread {
 					tuple.setTimestamp(new Timestamp(date.getTime()));
 
 					linesRead++;
-					System.out.println(mapper.writeValueAsString(tuple));
+					ImportThread.log.info("Adding FireWall Event {}", tuple);
 					ImportThread.this.eventLogRepo.save(tuple);
 
 				}catch(Exception e) {
