@@ -40,12 +40,13 @@ public class WinLogConfiguration {
 
 	@Bean
 	public DataSource getDataSource() throws IllegalStateException {
-
+		String dbPass = System.getenv("DB_PASS");
+		String remoteAddr = System.getenv("DB_HOST");
 		final DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 		dataSourceBuilder.driverClassName("com.mysql.cj.jdbc.Driver");
-		dataSourceBuilder.url("jdbc:mysql://" + "192.168.1.72" + ":3306/jwinlog");
+		dataSourceBuilder.url("jdbc:mysql://" + remoteAddr + ":3306/jwinlog");
 		dataSourceBuilder.username("root");
-		dataSourceBuilder.password("Database123");
+		dataSourceBuilder.password(dbPass);
 		return dataSourceBuilder.build();
 	}
 }
