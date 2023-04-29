@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5Dialect
+    hibernate.ddl-auto: update
+    hibernate:
+      ddl-auto: update
+  main:
+    web-environment: false
+server:
+  # port: 80
+  port: 80
+  servlet:
+    context-path: /
+
