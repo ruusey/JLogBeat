@@ -1,4 +1,4 @@
-package com.cybrary.celk.util;
+package com.jlogbeat.util;
 
 import javax.servlet.http.HttpServletRequest;
 

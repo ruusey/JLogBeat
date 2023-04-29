@@ -1,12 +1,12 @@
-package com.cybrary.celk.ingest.windows;
+package com.jlogbeat.ingest.windows;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
-import com.cybrary.celk.ingest.windows.model.FirewallLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jlogbeat.ingest.windows.model.FirewallLog;
 
 import lombok.extern.slf4j.Slf4j;
 

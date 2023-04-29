@@ -12,3 +12,11 @@ server:
   servlet:
     context-path: /
 
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %-5level- %msg%n'
+  level:
+    root: INFO
+springfox:
+  documentation:
+    enabled: true

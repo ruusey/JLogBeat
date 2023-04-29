@@ -1,4 +1,4 @@
-package com.cybrary.celk.ingest.windows.model;
+package com.jlogbeat.ingest.windows.model;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.cybrary.celk.ingest.windows.model;
+package com.jlogbeat.ingest.windows.model;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class Root{
+public class EventLog{
 	@JsonProperty("Id")
 	public int id;
 	@JsonProperty("Version")

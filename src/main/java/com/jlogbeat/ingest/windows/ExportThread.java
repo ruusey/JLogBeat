@@ -1,4 +1,4 @@
-package com.cybrary.celk.ingest.windows;
+package com.jlogbeat.ingest.windows;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

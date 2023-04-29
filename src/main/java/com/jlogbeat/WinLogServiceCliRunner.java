@@ -1,4 +1,4 @@
-package com.cybrary;
+package com.jlogbeat;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

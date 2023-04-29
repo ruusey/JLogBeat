@@ -4,14 +4,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.cybrary.celk</groupId>
+	<groupId>com.jlogbeat</groupId>
 	<artifactId>WinLog-Service</artifactId>
 	<name>WinLog-Service</name>
 	<description>Cybrary Elk Ingest Service</description>
 	<properties>
 		<java.version>11</java.version>
-		<start-class>com.cybrary.CelkServiceApplication</start-class>
-		<jar.finalName>celk-service</jar.finalName>
+		<start-class>com.jlogbeat.WinLogApplication</start-class>
+		<jar.finalName>jlogbeat-win</jar.finalName>
 	</properties>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -79,11 +79,7 @@
 			</exclusions>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-csv</artifactId>
-			<version>1.9.0</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -101,11 +97,6 @@
 		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
 
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 		</dependency>
@@ -118,14 +109,14 @@
 	</dependencies>
 
 	<build>
-		<finalName>celk-service</finalName>
+		<finalName>jlogbeat-win</finalName>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>com.cybrary.CelkServiceApplication</mainClass>
+					<mainClass>com.jlogbeat.WinLogApplicaation</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>

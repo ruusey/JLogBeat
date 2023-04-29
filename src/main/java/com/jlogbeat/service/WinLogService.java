@@ -1,4 +1,4 @@
-package com.cybrary.celk.service;
+package com.jlogbeat.service;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -9,9 +9,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import com.cybrary.celk.ingest.windows.WmicIngest;
-import com.cybrary.celk.ingest.windows.model.WindowsLog;
-import com.cybrary.celk.repo.WinLogEventRepository;
+import com.jlogbeat.entity.WindowsLog;
+import com.jlogbeat.ingest.windows.WmicIngest;
+import com.jlogbeat.repo.WinLogEventRepository;
 
 @Service
 public class WinLogService {
@@ -41,7 +41,7 @@ public class WinLogService {
 	}
 
 	public List<WindowsLog> getLogs(Integer page, Integer size) {
-		return this.eventLogRepo.findAllOrderByTimeGeneratedDesc(PageRequest.of(page, size));
+		return this.eventLogRepo.findAllByOrderByTimeGeneratedDesc(PageRequest.of(page, size));
 	}
 
 	public List<WindowsLog> getLogsBySource(String source, Integer page, Integer size){

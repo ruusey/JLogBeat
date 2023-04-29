@@ -1,4 +1,4 @@
-package com.cybrary.celk.ingest.windows;
+package com.jlogbeat.ingest.windows;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -17,14 +17,14 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.cybrary.celk.ingest.windows.model.Root;
-import com.cybrary.celk.ingest.windows.model.WindowsLog;
-import com.cybrary.celk.repo.WinLogEventRepository;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.cfg.CoercionAction;
 import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.fasterxml.jackson.databind.type.LogicalType;
+import com.jlogbeat.entity.WindowsLog;
+import com.jlogbeat.ingest.windows.model.EventLog;
+import com.jlogbeat.repo.WinLogEventRepository;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public class WmicIngest {
 			String command = null;
 			if (initial) {
 				command = WmicIngest.COMMAND
-						.replace("+", "(Get-Date) - (New-TimeSpan -Days 2)")
+						.replace("+", "(Get-Date) - (New-TimeSpan -Hours 2)")
 						.replace("%", WmicIngest.EXPORT_PATH).replace("^", log).replace("&", "-" + dumpTimestamp + "");
 			} else {
 				command = WmicIngest.COMMAND
@@ -95,11 +95,12 @@ public class WmicIngest {
 
 			notComplete = threads.stream().filter(thread->!thread.complete).collect(Collectors.toList());
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(1500);
 				attempts++;
 			} catch (Exception e) {
 			}
 		}
+
 
 		return dumpTimestamp;
 
@@ -115,14 +116,19 @@ public class WmicIngest {
 			String filePath = WmicIngest.EXPORT_PATH.replace("^", logName).replace("&", "-" + dumpTimestamp.toString());
 			String content = FileUtils.readFileToString(new File(filePath), StandardCharsets.UTF_8);
 			if ((content == null) || content.isBlank()) {
+				try {
+					FileUtils.delete(new File(filePath));
+
+				} catch (Exception e) {
+					WmicIngest.log.error("Failed to save all logs {}", e.getMessage());
+				}
 				continue;
 			}
 			WmicIngest.log.info("Parsing file [{}]  ", filePath);
 
-			Root[] root = om.readValue(content, Root[].class);
+			EventLog[] root = om.readValue(content, EventLog[].class);
 			this.lastTs.put(logName, dumpTimestamp);
-			List<WindowsLog> logs = new ArrayList<>();
-			for (Root r : root) {
+			for (EventLog r : root) {
 				try {
 					String[] props = r.properties.stream().map(p -> p.value.toString()).toArray(String[]::new);
 					WindowsLog winLog = WindowsLog.builder()
@@ -139,15 +145,16 @@ public class WmicIngest {
 					winLog = this.eventLogRepo.save(winLog);
 					recordCount++;
 				}catch(Exception e) {
-					WmicIngest.log.warn("Error saving EventLog {} Reason: {}", logName, e.getMessage());
+					// WmicIngest.log.warn("Error saving EventLog {} Reason: {}", logName,
+					// e.getMessage());
 					continue;
 				}
 			}
 
 
 			try {
-				new File(filePath).delete();
-				// this.eventLogRepo.saveAll(logs);
+				FileUtils.delete(new File(filePath));
+
 
 			}catch(Exception e) {
 				WmicIngest.log.error("Failed to save all logs {}", e.getMessage());
@@ -163,8 +170,8 @@ public class WmicIngest {
 
 			try {
 				Long records = this.parseCsvAndIngest(dumpTs);
-				WmicIngest.log.info("Ingest {} records complete, waiting 10 seconds...", records);
-				Thread.sleep(15000);
+				WmicIngest.log.info("Ingest {} records complete, waiting 60 seconds...", records);
+				Thread.sleep(60000);
 			} catch (Exception e) {
 				WmicIngest.log.error("Failed to ingest CSV... {}", e);
 

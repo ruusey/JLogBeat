@@ -1,4 +1,4 @@
-package com.cybrary.celk.ingest.windows.model;
+package com.jlogbeat.entity;
 
 import java.util.Date;
 

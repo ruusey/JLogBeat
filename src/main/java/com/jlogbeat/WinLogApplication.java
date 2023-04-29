@@ -1,13 +1,13 @@
-package com.cybrary;
+package com.jlogbeat;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CelkServiceApplication {
+public class WinLogApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CelkServiceApplication.class, args);
+		SpringApplication.run(WinLogApplication.class, args);
 	}
 
 }

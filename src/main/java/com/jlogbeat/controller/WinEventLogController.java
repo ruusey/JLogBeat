@@ -1,4 +1,4 @@
-package com.cybrary.celk.controller;
+package com.jlogbeat.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cybrary.celk.ingest.windows.model.WindowsLog;
-import com.cybrary.celk.service.WinLogService;
-import com.cybrary.celk.util.ApiUtils;
+import com.jlogbeat.entity.WindowsLog;
+import com.jlogbeat.service.WinLogService;
+import com.jlogbeat.util.ApiUtils;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
