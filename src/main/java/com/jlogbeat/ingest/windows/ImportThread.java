@@ -1,19 +1,30 @@
 package com.jlogbeat.ingest.windows;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDateTime;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jlogbeat.ingest.windows.model.FirewallLog;
+import com.jlogbeat.entity.FirewallLog;
+import com.jlogbeat.repo.FirewallEventRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Component
 public class ImportThread extends Thread {
+	private final transient FirewallEventRepository eventLogRepo;
 
-	public ImportThread() {
+	public ImportThread(@Autowired FirewallEventRepository eventLogRepo) {
+		this.eventLogRepo = eventLogRepo;
 		Boolean success = false;
 		try {
 			//			success = this.helk.deleteIndex(WmicIngest.DESTINATION_INDEX);
@@ -29,47 +40,69 @@ public class ImportThread extends Thread {
 
 	@Override
 	public void run() {
-		RandomAccessFile in = null;
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			in = new RandomAccessFile(WmicIngest.FIREWALL_LOG, "r");
-			String line;
-			Integer linesRead = 0;
-			Long start = Instant.now().toEpochMilli();
-			while (true) {
-				if ((line = in.readLine()) != null) {
-					String[] lineSplit = line.split(" ");
-					try {
-						FirewallLog tuple = new FirewallLog();
-						String tsString = lineSplit[0] + "T" + lineSplit[1];
-						tuple.setProtocol("Ru-Test");
-						tuple.setSourceIp(lineSplit[4]);
-						tuple.setDestinationIp(lineSplit[5]);
-						tuple.setSourcePort(Integer.parseInt(lineSplit[6].equals("-") ? "0" : lineSplit[6]));
-						tuple.setDestinationPort(Integer.parseInt(lineSplit[7].equals("-") ? "0" : lineSplit[7]));
-						LocalDateTime dateTime = LocalDateTime.parse(tsString);
-						tuple.setTime(tsString);
+		File in = null;
 
-						linesRead++;
-						//System.out.println(mapper.writeValueAsString(tuple));
-					} catch (Exception e) {
-						ImportThread.log.error("failed parsing Firewall Log line [{}]  {}", line, e.getMessage());
+		ObjectMapper mapper = new ObjectMapper();
+
+		Integer linesRead = 0;
+		Long start = Instant.now().toEpochMilli();
+		while (!Thread.interrupted()) {
+			in = new File(WmicIngest.FIREWALL_LOG);
+
+			LineIterator it = null;
+			try {
+				it = FileUtils.lineIterator(in, "UTF-8");
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			while (it.hasNext()) {
+				String line = it.nextLine();
+				String[] lineSplit = line.split(" ");
+				try {
+					FirewallLog tuple = new FirewallLog();
+					String tsString = lineSplit[0] + " " + lineSplit[1];
+					tsString = tsString.trim();
+					if ((tsString == null) || tsString.isEmpty() || tsString.isBlank()) {
+						continue;
 					}
-				} else {
-					ImportThread.log.info("Ingested {} firewall logs in {}ms", linesRead, (Instant.now().toEpochMilli() - start));
-					start = Instant.now().toEpochMilli();
-					linesRead = 0;
-					Thread.sleep(5000);
+					tuple.setAction(lineSplit[2]);
+					tuple.setProtocol(lineSplit[3]);
+					tuple.setSourceIp(lineSplit[4]);
+					tuple.setDestinationIp(lineSplit[5]);
+					tuple.setSourcePort(Integer.parseInt(lineSplit[6].equals("-") ? "0" : lineSplit[6]));
+					tuple.setDestinationPort(Integer.parseInt(lineSplit[7].equals("-") ? "0" : lineSplit[7]));
+					SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+					java.util.Date date = isoFormat.parse(tsString);
+					tuple.setTimestamp(new Timestamp(date.getTime()));
+
+					linesRead++;
+					System.out.println(mapper.writeValueAsString(tuple));
+					ImportThread.this.eventLogRepo.save(tuple);
+
+				}catch(Exception e) {
+					ImportThread.log.error("Failed {}", e);
+					continue;
 				}
 			}
-		} catch (Exception e) {
-			ImportThread.log.error("Failed running Firewall Log import [{}]  {}", e);
-		} finally {
 			try {
-				in.close();
-			} catch (IOException e) {
+				// it.close();
+				FileWriter fw = new FileWriter(in, false);
+				fw.flush();
+				fw.close();
+
+				Thread.sleep(20000);
+			} catch (Exception e) {
+				ImportThread.log.error("Failed {}", e);
+
 			}
+
+
 		}
+
+
 	}
 
 }

@@ -16,7 +16,7 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
 @Configuration
-public class CELKConfig {
+public class WinLogConfiguration {
 
 	@Bean
 	public Docket api() {

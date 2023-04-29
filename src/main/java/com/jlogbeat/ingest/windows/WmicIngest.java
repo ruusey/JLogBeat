@@ -43,18 +43,18 @@ public class WmicIngest {
 	public static final String DESTINATION_INDEX = "filebeat-2022.09.22-000001";
 	private final transient ExecutorService executorService;
 	private final transient WinLogEventRepository eventLogRepo;
+	private final transient ImportThread firewallImport;
+
 	// private Long lastTs;
 	private Map<String, Long> lastTs = new HashMap<>();
-	public WmicIngest(@Autowired ExecutorService executorService, @Autowired WinLogEventRepository eventLogRepo) {
+
+	public WmicIngest(@Autowired ExecutorService executorService, @Autowired WinLogEventRepository eventLogRepo,
+			@Autowired ImportThread firewallImport) {
 		this.executorService = executorService;
 		this.eventLogRepo = eventLogRepo;
+		this.firewallImport = firewallImport;
 	}
 
-
-	public ImportThread beginFirewallIngest() {
-		ImportThread it = new ImportThread();
-		return it;
-	}
 
 	public Long exportLogsToCsv() {
 		Boolean initial = false;
@@ -164,7 +164,9 @@ public class WmicIngest {
 	}
 
 	public void runRoutine() {
+		this.executorService.execute(this.firewallImport);
 		while (!this.executorService.isShutdown()) {
+
 			Long dumpTs = this.exportLogsToCsv();
 			WmicIngest.log.info("Completed dump with Timestamp {} ", dumpTs);
 

@@ -9,8 +9,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.jlogbeat.entity.FirewallLog;
 import com.jlogbeat.entity.WindowsLog;
 import com.jlogbeat.ingest.windows.WmicIngest;
+import com.jlogbeat.repo.FirewallEventRepository;
 import com.jlogbeat.repo.WinLogEventRepository;
 
 @Service
@@ -18,12 +20,14 @@ public class WinLogService {
 	private final transient WmicIngest ingest;
 	private final transient ExecutorService executorService;
 	private final transient WinLogEventRepository eventLogRepo;
+	private final transient FirewallEventRepository firewallRepo;
 
 	public WinLogService(@Autowired WmicIngest ingest, @Autowired ExecutorService executorService,
-			@Autowired WinLogEventRepository eventLogRepo) {
+			@Autowired WinLogEventRepository eventLogRepo, @Autowired FirewallEventRepository firewallRepo) {
 		this.ingest = ingest;
 		this.executorService = executorService;
 		this.eventLogRepo = eventLogRepo;
+		this.firewallRepo = firewallRepo;
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
@@ -56,6 +60,20 @@ public class WinLogService {
 		return this.eventLogRepo.findById(id).get();
 	}
 
+	public List<FirewallLog> getFirewallLogs(Integer page, Integer size) {
+		return this.firewallRepo.findAllByOrderByTimestampDesc(PageRequest.of(page, size));
+	}
 
+	public List<FirewallLog> getFirewallLogsBySip(String sourceIp, Integer page, Integer size) {
+		return this.firewallRepo.findAllBySourceIpOrderByTimestampDesc(sourceIp, PageRequest.of(page, size));
+	}
+
+	public List<FirewallLog> getFirewallLogsByDip(String destinationIp, Integer page, Integer size) {
+		return this.firewallRepo.findAllByDestinationIpOrderByTimestampDesc(destinationIp, PageRequest.of(page, size));
+	}
+
+	public List<FirewallLog> getFirewallLogsByProtocol(String protocol, Integer page, Integer size) {
+		return this.firewallRepo.findAllByProtocolOrderByTimestampDesc(protocol, PageRequest.of(page, size));
+	}
 
 }

@@ -1,18 +1,29 @@
-package com.jlogbeat.ingest.windows.model;
+package com.jlogbeat.entity;
 
+
+import java.sql.Timestamp;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "win_log_firewall")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FirewallLog {
-	private String date;
-	private String time;
+public class FirewallLog extends TemporalEntity {
+	@Id
+	@GeneratedValue
+	private Integer id;
+	private Timestamp timestamp;
 	private String action;
 	private String protocol;
 	private String sourceIp;

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jlogbeat.entity.FirewallLog;
 import com.jlogbeat.entity.WindowsLog;
 import com.jlogbeat.service.WinLogService;
 import com.jlogbeat.util.ApiUtils;
@@ -29,11 +30,50 @@ public class WinEventLogController {
 
 	@ApiOperation(value = "Get paginated event history", response = WindowsLog[].class)
 	@RequestMapping(method = RequestMethod.GET, produces = { "application/json" })
-	public ResponseEntity<?> getUserMouseHistoryByLab(@RequestParam(required = false, defaultValue = "0") Integer page,
+	public ResponseEntity<?> getWinLogs(@RequestParam(required = false, defaultValue = "0") Integer page,
 			@RequestParam(required = false, defaultValue = "10") Integer size) {
 		ResponseEntity<?> res = null;
 		try {
 			res = ApiUtils.buildSuccess(this.winLogService.getLogs(page, size));
+		} catch (Exception e) {
+			WinEventLogController.log.error("Unable to get event history", e);
+			res = ApiUtils.buildError("Unable to get event history");
+		}
+		return res;
+	}
+
+	@ApiOperation(value = "Get paginated event history", response = FirewallLog[].class)
+	@RequestMapping(value = "/firewall", method = RequestMethod.GET, produces = { "application/json" })
+	public ResponseEntity<?> getFirewallLogs(@RequestParam(required = false, defaultValue = "0") Integer page,
+			@RequestParam(required = false, defaultValue = "10") Integer size) {
+		ResponseEntity<?> res = null;
+		try {
+			res = ApiUtils.buildSuccess(this.winLogService.getFirewallLogs(page, size));
+		} catch (Exception e) {
+			WinEventLogController.log.error("Unable to get event history", e);
+			res = ApiUtils.buildError("Unable to get event history");
+		}
+		return res;
+	}
+
+	@ApiOperation(value = "Get paginated event history", response = FirewallLog[].class)
+	@RequestMapping(value = "/firewall/{query}", method = RequestMethod.GET, produces = { "application/json" })
+	public ResponseEntity<?> getFirewallLogs(@PathVariable String query,
+			@RequestParam(required = false, defaultValue = "0") Integer page,
+			@RequestParam(required = false, defaultValue = "10") Integer size) {
+		ResponseEntity<?> res = null;
+		try {
+			if (query.contains(".") && (query.contains("127.0.0") || query.contains("192.168"))) {
+				res = ApiUtils.buildSuccess(this.winLogService.getFirewallLogsBySip(query, page, size));
+
+			} else if (query.contains(".")) {
+				res = ApiUtils.buildSuccess(this.winLogService.getFirewallLogsByDip(query, page, size));
+
+			} else {
+				res = ApiUtils.buildSuccess(this.winLogService.getFirewallLogsByProtocol(query, page, size));
+
+			}
+			// res = ApiUtils.buildSuccess(this.winLogService.getLogs(page, size));
 		} catch (Exception e) {
 			WinEventLogController.log.error("Unable to get event history", e);
 			res = ApiUtils.buildError("Unable to get event history");
