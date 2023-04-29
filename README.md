@@ -28,3 +28,6 @@ Currently supported:
 ![alt text](https://i.imgur.com/TBKgAsU.png)
 ![alt text](https://i.imgur.com/O2dtkbt.png)
 
+## Notes:
+* You are required to run this as Admin to access the `System` log group
+* You may need to modify/create the firewall log and its permissions. The Default location on Windows is `C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log`
