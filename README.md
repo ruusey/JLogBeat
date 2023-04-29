@@ -3,6 +3,7 @@
 Tired of dealing with ELK and absurd winlogbeat indeces? Introducing `JLogBeat`
 * Requires Java 11
 * Requires Maven 3.8 or later.
+* MySQL DB with environment variables `DB_PASS` , `DB_HOST` set to their respective values
 
 This program collects windows System, Application Security and Firewall logs asynchronously and stores them in a normalized fashion within MYSQL allowing for easy querying.
 
