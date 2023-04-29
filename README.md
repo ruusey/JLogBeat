@@ -19,7 +19,7 @@ Currently supported:
 
 Currently supported: 
  * [GET] /event/firewall - Get paginated event history for the Firewall Log
- * [GET] /event/firewall/{query} -Get paginated event history for the Firewall Log based on query. Query may be a `sourceIp, A `destinationIp` or a `protocol` (TCP/UDP)
+ * [GET] /event/firewall/{query} -Get paginated event history for the Firewall Log based on query. Query may be a `sourceIp`, `destinationIp` or a `protocol` (TCP/UDP)
 
 ## In Action:
 
