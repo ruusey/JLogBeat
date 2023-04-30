@@ -4,6 +4,7 @@ Tired of dealing with ELK and absurd winlogbeat indeces? Introducing `JLogBeat`
 * Requires Java 11
 * Requires Maven 3.8 or later.
 * MySQL 8 DB 
+* Windows with Powershell 7 or a dist of pwsh.exe
 * Set Enironment Variables `DB_PASS` , `DB_HOST` and `EXPORT_DIR` to their respective values. EXPORT_DIR defines the location of the intermediary directory where dump files are stored
 
 This program collects windows System, Application Security and Firewall logs asynchronously and stores them in a normalized fashion within MYSQL allowing for easy querying.
