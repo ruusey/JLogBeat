@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 @Component
-public class WmicIngest {
+public class WinlogIngest {
 	private static final List<String> LOG_NAMES = Arrays.asList("system", "application", "security");
 	public static final String EXPORT_PATH = System.getenv("EXPORT_DIR") + "\\^&.json";
 	public static final Long initialTs = Instant.now().toEpochMilli();
@@ -45,22 +45,20 @@ public class WmicIngest {
 	private final transient WinLogEventRepository eventLogRepo;
 	private final transient ImportThread firewallImport;
 
-	// private Long lastTs;
 	private Map<String, Long> lastTs = new HashMap<>();
 
-	public WmicIngest(@Autowired ExecutorService executorService, @Autowired WinLogEventRepository eventLogRepo,
+	public WinlogIngest(@Autowired ExecutorService executorService, @Autowired WinLogEventRepository eventLogRepo,
 			@Autowired ImportThread firewallImport) {
 		this.executorService = executorService;
 		this.eventLogRepo = eventLogRepo;
 		this.firewallImport = firewallImport;
 	}
 
-
 	public Long exportLogsToCsv() {
 		Boolean initial = false;
 		if (this.lastTs.isEmpty()) {
-			for (String log : WmicIngest.LOG_NAMES) {
-				this.lastTs.put(log, WmicIngest.initialTs);
+			for (String log : WinlogIngest.LOG_NAMES) {
+				this.lastTs.put(log, WinlogIngest.initialTs);
 
 			}
 			initial = true;
@@ -68,17 +66,17 @@ public class WmicIngest {
 		List<ExportThread> threads = new ArrayList<>();
 		Long dumpTimestamp = Instant.now().toEpochMilli();
 
-		for (String log : WmicIngest.LOG_NAMES) {
+		for (String log : WinlogIngest.LOG_NAMES) {
 			Long diff = (dumpTimestamp - this.lastTs.get(log));
 			String command = null;
 			if (initial) {
-				command = WmicIngest.COMMAND
+				command = WinlogIngest.COMMAND
 						.replace("+", "(Get-Date) - (New-TimeSpan -Hours 2)")
-						.replace("%", WmicIngest.EXPORT_PATH).replace("^", log).replace("&", "-" + dumpTimestamp + "");
+						.replace("%", WinlogIngest.EXPORT_PATH).replace("^", log).replace("&", "-" + dumpTimestamp + "");
 			} else {
-				command = WmicIngest.COMMAND
+				command = WinlogIngest.COMMAND
 						.replace("+", "(Get-Date) - (New-TimeSpan -Milliseconds " + (diff) + ")")
-						.replace("%", WmicIngest.EXPORT_PATH).replace("^", log).replace("&", "-" + dumpTimestamp + "");
+						.replace("%", WinlogIngest.EXPORT_PATH).replace("^", log).replace("&", "-" + dumpTimestamp + "");
 			}
 
 			ExportThread export = new ExportThread(command);
@@ -91,7 +89,7 @@ public class WmicIngest {
 		List<ExportThread> notComplete = threads.stream().filter(thread->!thread.complete).collect(Collectors.toList());
 		while ((notComplete.size() > 0) && !Thread.interrupted() && (attempts != 3)
 				&& !this.executorService.isShutdown()) {
-			WmicIngest.log.info("Waiting on {} threads to complete", notComplete.size());
+			WinlogIngest.log.info("Waiting on {} threads to complete", notComplete.size());
 
 			notComplete = threads.stream().filter(thread->!thread.complete).collect(Collectors.toList());
 			try {
@@ -100,31 +98,27 @@ public class WmicIngest {
 			} catch (Exception e) {
 			}
 		}
-
-
 		return dumpTimestamp;
-
 	}
 
 	public Long parseCsvAndIngest(Long dumpTimestamp) throws Exception {
 		Long recordCount = 0l;
-		WmicIngest.log.info("Begin Windows CSV Log Ingest from Dump Timestamp {}",dumpTimestamp);
+		WinlogIngest.log.info("Begin Windows CSV Log Ingest from Dump Timestamp {}", dumpTimestamp);
 		ObjectMapper om = new ObjectMapper();
 		om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 		om.coercionConfigFor(LogicalType.POJO).setCoercion(CoercionInputShape.EmptyString, CoercionAction.AsNull);
-		for(String logName : WmicIngest.LOG_NAMES) {
-			String filePath = WmicIngest.EXPORT_PATH.replace("^", logName).replace("&", "-" + dumpTimestamp.toString());
+		for(String logName : WinlogIngest.LOG_NAMES) {
+			String filePath = WinlogIngest.EXPORT_PATH.replace("^", logName).replace("&", "-" + dumpTimestamp.toString());
 			String content = FileUtils.readFileToString(new File(filePath), StandardCharsets.UTF_8);
 			if ((content == null) || content.isBlank()) {
 				try {
 					FileUtils.delete(new File(filePath));
-
 				} catch (Exception e) {
-					WmicIngest.log.error("Failed to save all logs {}", e.getMessage());
+					WinlogIngest.log.error("Failed to delete temp dump files {}", e.getMessage());
 				}
 				continue;
 			}
-			WmicIngest.log.info("Parsing file [{}]  ", filePath);
+			WinlogIngest.log.info("Parsing file [{}]  ", filePath);
 
 			EventLog[] root = om.readValue(content, EventLog[].class);
 			this.lastTs.put(logName, dumpTimestamp);
@@ -145,19 +139,15 @@ public class WmicIngest {
 					winLog = this.eventLogRepo.save(winLog);
 					recordCount++;
 				}catch(Exception e) {
-					// WmicIngest.log.warn("Error saving EventLog {} Reason: {}", logName,
-					// e.getMessage());
+					WinlogIngest.log.error("Error saving EventLog {} Reason: {}", logName, e);
 					continue;
 				}
 			}
 
-
 			try {
 				FileUtils.delete(new File(filePath));
-
-
 			}catch(Exception e) {
-				WmicIngest.log.error("Failed to save all logs {}", e.getMessage());
+				WinlogIngest.log.error("Failed to delete temp dump files {}", e.getMessage());
 			}
 		}
 		return recordCount;
@@ -168,17 +158,15 @@ public class WmicIngest {
 		while (!this.executorService.isShutdown()) {
 
 			Long dumpTs = this.exportLogsToCsv();
-			WmicIngest.log.info("Completed dump with Timestamp {} ", dumpTs);
+			WinlogIngest.log.info("Completed dump with Timestamp {} ", dumpTs);
 
 			try {
 				Long records = this.parseCsvAndIngest(dumpTs);
-				WmicIngest.log.info("Ingest {} records complete, waiting 60 seconds...", records);
+				WinlogIngest.log.info("Ingest {} Windows Event Logs complete, waiting 60 seconds...", records);
 				Thread.sleep(60000);
 			} catch (Exception e) {
-				WmicIngest.log.error("Failed to ingest CSV... {}", e);
-
+				WinlogIngest.log.error("Failed to ingest CSV log dump. Reason: {}", e);
 			}
 		}
 	}
-
 }

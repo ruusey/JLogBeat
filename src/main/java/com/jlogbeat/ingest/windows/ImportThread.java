@@ -5,14 +5,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jlogbeat.entity.FirewallLog;
 import com.jlogbeat.repo.FirewallEventRepository;
 
@@ -25,36 +23,22 @@ public class ImportThread extends Thread {
 
 	public ImportThread(@Autowired FirewallEventRepository eventLogRepo) {
 		this.eventLogRepo = eventLogRepo;
-		Boolean success = false;
-		try {
-			//			success = this.helk.deleteIndex(WmicIngest.DESTINATION_INDEX);
-			//
-			//			if (success) {
-			//				this.helk.createIndex(WmicIngest.DESTINATION_INDEX, "_doc");
-			//				log.info("Create winlogbeat test!");
-			//			}
-		} catch (Exception e) {
-			ImportThread.log.error(">>> Failed to initialize HELK firewall import {}", e.getMessage());
-		}
 	}
 
 	@Override
 	public void run() {
 		File in = null;
 
-		ObjectMapper mapper = new ObjectMapper();
-
 		Integer linesRead = 0;
-		Long start = Instant.now().toEpochMilli();
 		while (!Thread.interrupted()) {
-			in = new File(WmicIngest.FIREWALL_LOG);
+			in = new File(WinlogIngest.FIREWALL_LOG);
 
 			LineIterator it = null;
 			try {
 				it = FileUtils.lineIterator(in, "UTF-8");
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			} catch (IOException e) {
+				ImportThread.log.error("Failed to create LineIterator for Firewall Log File at {}, Reason: {}",
+						WinlogIngest.FIREWALL_LOG, e);
 			}
 
 			while (it.hasNext()) {
@@ -79,30 +63,26 @@ public class ImportThread extends Thread {
 					tuple.setTimestamp(new Timestamp(date.getTime()));
 
 					linesRead++;
-					ImportThread.log.info("Adding FireWall Event {}", tuple);
-					ImportThread.this.eventLogRepo.save(tuple);
+					ImportThread.log.info("Adding Firewall Event {}", tuple);
+					this.eventLogRepo.save(tuple);
 
 				}catch(Exception e) {
-					ImportThread.log.error("Failed {}", e);
+					ImportThread.log.error("Failed to parse Firewall Event {}", e);
 					continue;
 				}
 			}
 			try {
-				// it.close();
+				it.close();
 				FileWriter fw = new FileWriter(in, false);
+				fw.write("");
 				fw.flush();
 				fw.close();
+				ImportThread.log.info("Ingest {} Firewall Event records complete, waiting 60 seconds...", linesRead);
 
-				Thread.sleep(20000);
+				Thread.sleep(60000);
 			} catch (Exception e) {
 				ImportThread.log.error("Failed {}", e);
-
 			}
-
-
 		}
-
-
 	}
-
 }

@@ -42,6 +42,10 @@ public class WinLogConfiguration {
 	public DataSource getDataSource() throws IllegalStateException {
 		String dbPass = System.getenv("DB_PASS");
 		String remoteAddr = System.getenv("DB_HOST");
+
+		if ((dbPass == null) || (remoteAddr == null))
+			throw new IllegalStateException("Please set the Environment variables DB_PASS and DB_HOST");
+
 		final DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 		dataSourceBuilder.driverClassName("com.mysql.cj.jdbc.Driver");
 		dataSourceBuilder.url("jdbc:mysql://" + remoteAddr + ":3306/jwinlog");

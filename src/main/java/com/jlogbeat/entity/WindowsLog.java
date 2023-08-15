@@ -11,6 +11,7 @@ import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -19,26 +20,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class WindowsLog extends TemporalEntity {
+
 	@Id
 	@GeneratedValue
 	private Integer id;
 	private Integer eventId;
 	private String machineName;
-	@Column(name = "data_str", columnDefinition = "TEXT")
 
+	@Column(name = "data_str", columnDefinition = "TEXT")
 	private String dataStr;
 	@Column(unique = true)
 	private Integer idx;
 	private String category;
 	private String categoryNumber;
 	private String entryType;
-	@Column(name = "message", columnDefinition = "TEXT")
 
+	@Column(name = "message", columnDefinition = "TEXT")
 	private String message;
 	private String sourceStr;
-	@Column(name = "replacement_strings", columnDefinition = "TEXT")
 
+	@Column(name = "replacement_strings", columnDefinition = "TEXT")
 	private String replacementStrings;
 	private String instanceId;
 	private Timestamp timeGenerated;

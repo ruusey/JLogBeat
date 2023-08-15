@@ -11,18 +11,18 @@ import org.springframework.stereotype.Service;
 
 import com.jlogbeat.entity.FirewallLog;
 import com.jlogbeat.entity.WindowsLog;
-import com.jlogbeat.ingest.windows.WmicIngest;
+import com.jlogbeat.ingest.windows.WinlogIngest;
 import com.jlogbeat.repo.FirewallEventRepository;
 import com.jlogbeat.repo.WinLogEventRepository;
 
 @Service
 public class WinLogService {
-	private final transient WmicIngest ingest;
+	private final transient WinlogIngest ingest;
 	private final transient ExecutorService executorService;
 	private final transient WinLogEventRepository eventLogRepo;
 	private final transient FirewallEventRepository firewallRepo;
 
-	public WinLogService(@Autowired WmicIngest ingest, @Autowired ExecutorService executorService,
+	public WinLogService(@Autowired WinlogIngest ingest, @Autowired ExecutorService executorService,
 			@Autowired WinLogEventRepository eventLogRepo, @Autowired FirewallEventRepository firewallRepo) {
 		this.ingest = ingest;
 		this.executorService = executorService;
