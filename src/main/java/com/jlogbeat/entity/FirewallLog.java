@@ -25,6 +25,7 @@ public class FirewallLog extends TemporalEntity {
 	@Id
 	@GeneratedValue
 	private Integer id;
+	private String machineName;
 	private Timestamp timestamp;
 	private String action;
 	private String protocol;
@@ -41,6 +42,5 @@ public class FirewallLog extends TemporalEntity {
 	private String icmpCode;
 	private String info;
 	private String path;
-
 
 }

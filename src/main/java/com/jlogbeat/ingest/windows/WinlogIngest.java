@@ -40,7 +40,6 @@ public class WinlogIngest {
 
 	public static final String FIREWALL_LOG = "C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log";
 
-	public static final String DESTINATION_INDEX = "filebeat-2022.09.22-000001";
 	private final transient ExecutorService executorService;
 	private final transient WinLogEventRepository eventLogRepo;
 	private final transient ImportThread firewallImport;
@@ -59,7 +58,6 @@ public class WinlogIngest {
 		if (this.lastTs.isEmpty()) {
 			for (String log : WinlogIngest.LOG_NAMES) {
 				this.lastTs.put(log, WinlogIngest.initialTs);
-
 			}
 			initial = true;
 		}

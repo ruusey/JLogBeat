@@ -3,6 +3,7 @@ package com.jlogbeat.ingest.windows;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class ImportThread extends Thread {
+	private static final transient String HOST = ImportThread.getMachineHost();
 	private final transient FirewallEventRepository eventLogRepo;
 
 	public ImportThread(@Autowired FirewallEventRepository eventLogRepo) {
@@ -39,6 +41,7 @@ public class ImportThread extends Thread {
 			} catch (IOException e) {
 				ImportThread.log.error("Failed to create LineIterator for Firewall Log File at {}, Reason: {}",
 						WinlogIngest.FIREWALL_LOG, e);
+				break;
 			}
 
 			while (it.hasNext()) {
@@ -46,22 +49,24 @@ public class ImportThread extends Thread {
 				String[] lineSplit = line.split(" ");
 				try {
 					FirewallLog tuple = new FirewallLog();
+
 					String tsString = lineSplit[0] + " " + lineSplit[1];
 					tsString = tsString.trim();
 					if ((tsString == null) || tsString.isEmpty() || tsString.isBlank()) {
 						continue;
 					}
+					SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+					java.util.Date date = isoFormat.parse(tsString);
+					tuple.setTimestamp(new Timestamp(date.getTime()));
+
 					tuple.setAction(lineSplit[2]);
 					tuple.setProtocol(lineSplit[3]);
 					tuple.setSourceIp(lineSplit[4]);
 					tuple.setDestinationIp(lineSplit[5]);
 					tuple.setSourcePort(Integer.parseInt(lineSplit[6].equals("-") ? "0" : lineSplit[6]));
 					tuple.setDestinationPort(Integer.parseInt(lineSplit[7].equals("-") ? "0" : lineSplit[7]));
-					SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-					java.util.Date date = isoFormat.parse(tsString);
-					tuple.setTimestamp(new Timestamp(date.getTime()));
-
+					tuple.setMachineName(ImportThread.HOST);
 					linesRead++;
 					ImportThread.log.info("Adding Firewall Event {}", tuple);
 					this.eventLogRepo.save(tuple);
@@ -77,12 +82,24 @@ public class ImportThread extends Thread {
 				fw.write("");
 				fw.flush();
 				fw.close();
-				ImportThread.log.info("Ingest {} Firewall Event records complete, waiting 60 seconds...", linesRead);
+				ImportThread.log.info("Ingest {} Firewall Event records complete, waiting 10 minutes...", linesRead);
 
-				Thread.sleep(60000);
+				Thread.sleep(60000 * 10);
 			} catch (Exception e) {
 				ImportThread.log.error("Failed {}", e);
 			}
 		}
+	}
+
+	private static String getMachineHost() {
+		String hostname = "Unknown";
+		try
+		{
+			final InetAddress addr=InetAddress.getLocalHost();
+			hostname = addr.getHostName();
+		}catch(Exception e) {
+			ImportThread.log.error("Failed to get machine hostname. Reason: {}", e);
+		}
+		return hostname;
 	}
 }

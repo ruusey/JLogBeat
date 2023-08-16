@@ -26,6 +26,7 @@ public class WindowsLog extends TemporalEntity {
 	@Id
 	@GeneratedValue
 	private Integer id;
+
 	private Integer eventId;
 	private String machineName;
 
