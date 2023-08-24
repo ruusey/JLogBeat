@@ -70,10 +70,9 @@ public class SearchService {
 				} catch (Exception e) {
 					SearchService.log.error("Failed to parse line {}. Reason: {}", lineCount, e.getMessage());
 				}
-				if (lineCount == 100000) {
+				if (lineCount == 200000) {
 					break;
 				}
-
 			}
 			br.close();
 			SearchService.log.info("Loaded {} log entries into memory, Adding to Leucine Index.", lineCount);
@@ -111,12 +110,18 @@ public class SearchService {
 				contexts.add(new BytesRef("log"));
 
 				BytesRef payload = this.payload(line);
-				// String to index, ex. Compound Str of user email, name and guid
+				//				String logSuggestion = String.join(" ", line.getLogId() + "", line.getMachineName(), line.getDateTime(),
+				//						line.getCode(), line.getSpace(), line.getLevel() + line.getLog());
 				this.suggestorLogs.add(
-						new BytesRef(
-								String.join(" ", line.getLogId() + "", line.getMachineName(), line.getDateTime(),
-										line.getCode(), line.getSpace(), line.getLevel(), line.getLog())),
+						new BytesRef(line.getLogId() + ""), contexts, 1, payload);
+				this.suggestorLogs.add(
+						new BytesRef(line.getMachineName()), contexts, 1, payload);
+				this.suggestorLogs.add(new BytesRef(line.getDateTime()), contexts, 1, payload);
+				this.suggestorLogs.add(new BytesRef(line.getCode()), contexts, 1, payload);
+				this.suggestorLogs.add(new BytesRef(line.getSpace()), contexts, 1, payload);
+				this.suggestorLogs.add(new BytesRef(line.getLevel()),
 						contexts, 1, payload);
+				this.suggestorLogs.add(new BytesRef(line.getLog()), contexts, 1, payload);
 
 			}
 			directoryWriter.addDocuments(toIndex);
@@ -124,7 +129,7 @@ public class SearchService {
 			this.suggestorLogs.refresh();
 
 			directoryWriter.close();
-			SearchService.log.info("Succesfully initialized Index in {} ms", this.timeSinceStr());
+			SearchService.log.info("Succesfully initialized Index{}", this.timeSinceStr());
 		}
 	}
 
@@ -134,10 +139,10 @@ public class SearchService {
 
 	public List<Object> suggestLogs(String term, Integer maxResults) throws IOException {
 		this.resetOpTime();
-		SearchService.log.info("Returning suggestions for Accounts matching string '{}'", term);
+		SearchService.log.info("Returning suggestions for Logs matching query '{}'", term);
 		List<Lookup.LookupResult> lookup = this.suggestorLogs.lookup(term, false, maxResults);
 		List<Object> suggestions = lookup.stream().map(SearchService::getPayload).collect(Collectors.toList());
-		SearchService.log.info("Found {} suggestion(s) {}", suggestions.size(), this.timeSinceStr());
+		SearchService.log.info("Found {} suggestion(s){}", suggestions.size(), this.timeSinceStr());
 		return suggestions;
 	}
 	@SuppressWarnings("unchecked")
