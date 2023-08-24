@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jlogbeat.entity.FirewallLog;
 import com.jlogbeat.entity.WindowsLog;
+import com.jlogbeat.service.SearchService;
 import com.jlogbeat.service.WinLogService;
 import com.jlogbeat.util.ApiUtils;
 
@@ -23,9 +24,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WinEventLogController {
 	private final transient WinLogService winLogService;
+	private final transient SearchService searchService;
 
-	public WinEventLogController(@Autowired WinLogService winLogService) {
+	public WinEventLogController(@Autowired WinLogService winLogService, @Autowired SearchService searchService) {
 		this.winLogService = winLogService;
+		this.searchService = searchService;
+	}
+
+	@ApiOperation(value = "Perform Sample Blugene Log search", response = FirewallLog[].class)
+	@RequestMapping(value = "/search/{query}", method = RequestMethod.GET, produces = { "application/json" })
+	public ResponseEntity<?> getFirewallLogs(@PathVariable String query) {
+		ResponseEntity<?> res = null;
+		try {
+			res = ApiUtils.buildSuccess(this.searchService.suggestLogs(query, 1000));
+		} catch (Exception e) {
+			WinEventLogController.log.error("Unable to get Blugene Logs", e);
+			res = ApiUtils.buildError("Unable to get Blugene Logs");
+		}
+		return res;
 	}
 
 	@ApiOperation(value = "Get paginated event history", response = WindowsLog[].class)

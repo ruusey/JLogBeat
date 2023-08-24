@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +28,7 @@ public class WinLogService {
 		this.firewallRepo = firewallRepo;
 	}
 
-	@EventListener(ApplicationReadyEvent.class)
+	// @EventListener(ApplicationReadyEvent.class)
 	public void beginCollection() {
 		Runnable run = () -> {
 
