@@ -145,6 +145,7 @@ public class SearchService {
 		SearchService.log.info("Found {} suggestion(s){}", suggestions.size(), this.timeSinceStr());
 		return suggestions;
 	}
+
 	@SuppressWarnings("unchecked")
 	private static <T> T getPayload(Lookup.LookupResult result) {
 		try {
